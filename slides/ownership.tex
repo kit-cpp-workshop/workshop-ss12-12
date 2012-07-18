@@ -1,0 +1,399 @@
+\section{ownership of data}
+
+
+\subsection{C++ and copying}
+
+\begin{frame}[fragile]{assignment}
+	\begin{block}{Philosohpie}
+		\begin{itemize}
+			\item Standard, 5.17/2: Zuweisung ersetzt Wert der linken Seite durch Wert der rechten Seite
+			\item Standard, 12.8/29: Die default-Zuweisung ist eine member-weise Zuweisung (zunächst Zuweisung der base-class subobjects, dann der der member)
+		\end{itemize}
+		
+		$\implies$ Kopie $\implies$ \enquote{copy-assignment}
+	\end{block}
+	
+	\pause
+	
+	\begin{lstlisting}
+		struct MyS {
+			public:
+			/*inline*/ MyS& operator= (MyS const&);
+		};
+		
+		MyS a;
+		MyS b;
+		a = b;
+	\end{lstlisting}
+\end{frame}
+
+\begin{frame}[fragile]{copy-ctor}
+	\begin{block}{Philosohpie}
+		\begin{itemize}
+			\item Standard, 12.1/9: der copy-ctor kopiert >>Dinge<<
+			\item Standard, 12.8/16: Der default-copy-ctor kopiert member-weise (zunächst Kopieren der base class subobjects)
+		\end{itemize}
+		
+		$\implies$ Kopie
+	\end{block}
+	
+	\begin{lstlisting}
+		struct MyS {
+			public:
+			/*inline*/ MyS(MyS const&);
+		};
+		
+		MyS a;
+		MyS b(a);
+		// oder
+		MyS b = a;
+	\end{lstlisting}
+\end{frame}
+
+\begin{frame}[fragile]{Grenzen des Kopierens}
+	\begin{itemize}
+		\item Referenzen als data members
+		\item Pointer + RAII
+		\item const data members
+		\item class-type data member ohne assignment-op/copy-ctor
+		\item exception-safety
+	\end{itemize}
+	
+	In diesen Fällen (bis auf ptr) wird auch kein default copy-ctor/assignment-op definiert! (dies schlägt fehl)
+	
+	\pause
+	
+	Achtung: Der Compiler darf Kopieren von temporaries vermeiden, selbst wenn assignment-op/copy-ctor Seiteneffekte haben!
+	Z.B. function arguments, return value
+	
+	\begin{lstlisting}
+		MyS foo(MyS p) {
+			MyS ret( p );
+			return ret;
+		}
+		
+		MyS a;
+		MyS b = foo(a);
+	\end{lstlisting}
+\end{frame}
+
+\begin{frame}[fragile]{swap}
+	\begin{block}{ assignment mit \emph{strong guarantee} }
+		\begin{lstlisting}
+			struct My {
+				My& operator= (My const& rhs) {
+					Me_can_throw temp;
+					temp = rhs.member;	// copy, can and may throw
+					
+					std::swap(temp, this->member);	// swap, no-throw!
+					return *this;
+				}
+			private:
+				Me_can_thow member;
+			};
+		\end{lstlisting}
+	\end{block}
+	
+	\pause
+	
+	\begin{block}{pro/contra von swap gegenüber doppelter Kopie}
+		\begin{itemize}
+			\item[+] meist no-throw (\texttt{noexcept})
+			\item[+] bei STL-Containern in $O(1)$
+			\item[-] expliziter Aufruf notwendig
+			\item[-] kein swap-ctor möglich
+		\end{itemize}
+	\end{block}
+\end{frame}
+
+\begin{frame}[fragile]{move semantics}
+	\begin{block}{Philosohpie}
+		\begin{itemize}
+			\item Philosophie: (12.1/9) Verschieben von Inhalten
+			\item 12.8/16, 12.8/29: default move-assignment \& move-ctor verschieben member-weise
+		\end{itemize}
+	\end{block}
+	
+	\pause
+	
+	\begin{lstlisting}
+		struct MyS {
+			public:
+			/*inline*/ MyS(MyS&&);
+			/*inline*/ MyS& operator= (MyS&&);
+		};
+		
+		MyS b = MyS();
+		b = MyS();
+		
+		MyS a;
+		b = std::move(a);
+	\end{lstlisting}
+\end{frame}
+
+\begin{frame}[fragile]{Beispiel}
+	\begin{lstlisting}
+		vector < int > a = {0, 1, 2, 3};
+		vector < int > b = {0, 1, 2, 3, 4};
+		vector < int > b_pre;
+		
+		b_pre = b;
+		//- b_pre == {0, 1, 2, 3, 4}
+		a = move(b);
+		//- a == b_pre
+		//- b == >undefined<
+	\end{lstlisting}
+	
+	\pause
+	
+	Kopieren: Elementweises Kopieren ($\implies O(n)$) \\
+	Verschieben: Pointer tauschen ($\implies O(1)$)
+\end{frame}
+
+\begin{frame}{STL data structures}
+	\begin{itemize}
+		\item haben ein part-whole-ownership wie Elemente<->Menge
+		\item hauptsächlich: default-ctor, kopieren \\
+		      bspw.: \texttt{resize + []} vs. \texttt{reserve + push\_back + lvalue ref}
+		\item Vermeiden von Kopien: move semantics oder Pointer \\
+		      bspw: \texttt{emplace\_back}
+		\item Problem bei raw ptrs: bei Zerstörung des Pointers wird das Ziel nicht zerstört!
+		      daher: ungeeignet für das ownership-Modell der STL-Container (aber möglich)
+	\end{itemize}
+\end{frame}
+
+
+\subsection{ownership \& smart ptrs}
+
+\begin{frame}[fragile]{Zwei Probleme (1)}
+	\begin{block}{Problem 1}
+		\begin{lstlisting}
+			int* p = new int[42];
+			
+			if( cond ) {
+				delete[] p;
+				return;
+			}
+			
+			try{ something() }
+			catch(...) {
+				delete[] p;
+				throw;
+			}
+			
+			try{ something() }
+			catch(MyExpT&) { delete[] p; }
+			catch(MyExpT1&) { delete[] p; }
+			catch(...) { delete[] p; }
+		\end{lstlisting}
+	\end{block}
+\end{frame}
+
+\begin{frame}[fragile]{Zwei Probleme (2)}
+	\begin{block}{Problem 2}
+		\begin{lstlisting}
+			struct Louvre {
+				MonaLisa* show();
+				~Louvre() {
+					delete pML;
+				}
+			private:
+				MonaLisa* pML;
+			};
+			
+			struct Peruggia {
+				void thieve(MonaLisa* p) {
+					pML = p;
+				}
+				~Peruggia() {
+					delete pML;
+				}
+			private:
+				MonaLisa* pML;
+			};
+		\end{lstlisting}
+	\end{block}
+\end{frame}
+
+\begin{frame}{ smart pointers }
+	\begin{itemize}
+		\item wrapper-Objekte für (raw) Pointer
+		\item RAII-Konstrukte (beim Zerstören wird automatisch aufgeräumt)
+		\item explizites owenership-Modell
+		\item exception-\enquote{safe}
+		\item alter Repräsentant: auto\_ptr -- nicht verwenden (deprecated)!
+		\item Verwendung mit synax analog Pointern (\texttt{*} dereferenzieren, \texttt{->} (operator overloading)
+	\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]{ \texttt{unique\_ptr} }
+	\begin{itemize}
+		\item \textbf{ein} Besitzer
+		\item move-semantics zum Besitzerwechsel
+		\item thread-safe movement
+		\item einzelne Instanz \emph{nicht} thread-safe
+	\end{itemize}
+	
+	\begin{lstlisting}
+		#include <memory>
+		
+		unique_ptr < int > myInt = new int;
+		unique_ptr < int > otherInt = new int;
+		
+		otherInt = myInt;	// copying is forbidden! (makes no sense)
+		
+		*otherInt = 5;
+		cout << *otherInt;
+		
+		vector < unique_ptr < LargeData > > myVec;	// ok
+	\end{lstlisting}
+\end{frame}
+
+\begin{frame}[fragile]{ \texttt{unique\_ptr} \& move }
+	Mit move-semantic kann das Besitzer-Objekt geändert werden:
+	
+	\begin{lstlisting}
+		struct Louvre {
+			MonaLisa& show();
+			unique_ptr < MonaLisa > breakIn();
+			
+			~Louvre() {}
+		private:
+			unique_ptr < MonaLisa > pML;
+		};
+		
+		struct Peruggia {
+			void thieve(unique_ptr < MonaLisa > p) {
+				pML = move(p);
+			}
+			~Peruggia() {}
+		private:
+			unique_ptr < MonaLisa > pML;
+		};
+		
+		Louvre myMuseum;
+		Peruggia myThief;
+		
+		unique_ptr < MonaLisa > pML = move( myMusee.breakIn() );
+		myThief.steel( move(pML) );
+	\end{lstlisting}
+\end{frame}
+
+\begin{frame}[fragile]{ \texttt{shared\_ptr} }
+	\begin{itemize}
+		\item viele, gleichrangige Besitzer (wie Taxi-Gemeinschaft)
+		\item der letzte macht das Licht aus (ruft \texttt{delete} auf)
+		\item thread-safe Besitzer-Operationen (z.B. Erzeugen von Mitbesitzer-Instanzen)
+		\item einzelne Instanz \emph{nicht} thread-safe
+	\end{itemize}
+	
+	\begin{lstlisting}
+		#include <memory>
+		
+		shared_ptr < int > myInt = new int;
+		{
+			shared_ptr < int > otherInt = new int;
+			
+			otherInt = myInt;	// ok, old int of otherInt is destroyed
+			
+			*otherInt = 5;
+			cout << *otherInt;
+		}//- otherInt is destroyed, but its content lives on
+		
+		vector < shared_ptr < LargeData > > myVec;	// ok
+	\end{lstlisting}
+\end{frame}
+
+\begin{frame}[fragile]{ \texttt{shared\_ptr} \& copying }
+	Mit dem shared\_ptr lässt sich oft Kopieren vermeiden:\\
+	Alle, die Zugriff auf die Daten brauchen, werden einfach Mitbesitzer (indem sie eine shared\_ptr-Instanz speichern).
+	
+	\begin{lstlisting}
+		struct A { shared_ptr < foo > m; };
+		struct B { shared_ptr < foo > m; };
+		
+		void f(shared_ptr < foo > p) {
+			/* do something */
+		}
+		
+		shared_ptr < foo > p = new foo;
+		A a = {p};
+		B b = {p};
+		f(p);
+		
+		b.m.reset();
+		p.reset();
+		a.m.reset();
+	\end{lstlisting}
+\end{frame}
+
+\begin{frame}[fragile]{Der kleine Kommunismus in C++}
+	Niemals raw pointer und smart\_ptr mischen!
+	
+	\begin{lstlisting}
+		shared\_ptr < foo > sp = p;
+		delete p;
+	\end{lstlisting}
+	
+	\pause
+	
+	Defensives Programmieren mit shared\_ptr: Factory
+	
+	\begin{lstlisting}
+		class My {
+		private:
+			My();
+			
+		public:
+			typedef shared_ptr < My > Ptr;
+			
+			static PMy create() {
+				return new My;
+			}
+		};
+		
+		My* p = new My; // forbidden
+		My::Ptr p = My::create(); // OK
+	\end{lstlisting}
+\end{frame}
+
+\begin{frame}{ \texttt{shared\_ptr} \& Hierarchie }
+	Situation:
+	\begin{itemize}
+		\item Ein Besitzer-Objekt r hält ein Besitztum d in beliebigem ownership.
+		\item r selbst wird in shared ownership gehalten.
+		\item d benötigt einen Zugang zu r.
+	\end{itemize}
+	
+	\pause
+	Möglichkeit 1: d hält einen shared\_ptr auf r
+	\pause
+	Möglichkeit 2: d hält einen raw ptr auf r
+	\pause
+	Lösung: weak\_ptr
+	
+	\begin{block}{weak\_ptr}
+		\begin{itemize}
+			\item hat selbst keinen Besitz am ptr
+			\item kein Dereferenzieren usw.
+			\item kann in einen shared\_ptr verwandelt werden
+			\item kann auf Zerstörtheit geprüft werden
+		\end{itemize}
+	\end{block}
+\end{frame}
+
+\begin{frame}[fragile]{ \texttt{weak\_ptr}: Beispiel }
+	\begin{lstlisting}
+		struct Owned;
+		struct Owner {
+			shared_ptr < Owned > m;
+			~Owner();
+		};
+		
+		struct Owned {
+			weak_ptr < Owner > m;
+		};
+		
+		Owner::~Owner() {}
+	\end{lstlisting}
+\end{frame}

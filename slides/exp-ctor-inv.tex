@@ -1,0 +1,101 @@
+\section{exceptions, ctor und Invarianten}
+
+\begin{frame}[fragile]{ Variante A }
+	\begin{lstlisting}
+		struct Socket {
+			Socket(Port p) { open(p); }
+			~Socket() { close(); }
+			
+			send() { /*...*/ }
+		};
+		
+		try {
+			Socket s = {80};
+			s.use();
+		}catch(SocketExcp&) { /*...*/ }
+		
+		// cannot use `s` outside!
+	\end{lstlisting}
+\end{frame}
+
+\begin{frame}[fragile]{ Variante B }
+	\begin{lstlisting}
+		struct Socket {
+			Socket() { open(invalid); }
+			Socket(Port p) { open(p); }
+			~Socket() {
+				if(invalid != port) { close(); }
+			}
+		};
+		
+		Socket sock; // invalid socket!
+		try {
+			sock = Socket(80);	// moves!
+		}catch(std::bad_alloc&) { /*...*/
+		}catch(SocketExcp&) { /*...*/
+		}
+		
+		sock.use();
+	\end{lstlisting}
+\end{frame}
+
+\begin{frame}[fragile]{ Variante C }
+	\begin{lstlisting}
+		struct Socket {
+			Socket(Port p) { open(p); }
+			~Socket() { close(); }
+		};
+		
+		Socket* pSock = nullptr;
+		try {
+			pBuf = new Socket(80);
+		}catch(std::bad_alloc&) { /*...*/
+		}catch(SocketExcp&) { /*...*/
+		}
+		
+		pSock->use();
+		
+		delete pSock;
+	\end{lstlisting}
+\end{frame}
+
+\begin{frame}[fragile]{ Variante D }
+	\begin{lstlisting}
+		struct Socket {
+			Socket(Port p) { open(p); }
+			~Socket() {
+				if(invalid != port) { close(); }
+			}
+		};
+		
+		char sockBuf[ sizeof(Socket) ];
+		Socket* pSock = nullptr;
+		try {
+			pSock = new(sockBuf) Socket(80);
+		}catch(std::bad_alloc&) { /*...*/
+		}catch(SocketExcp&) { /*...*/
+		}
+		
+	\end{lstlisting}
+\end{frame}
+
+\begin{frame}[fragile]{ Variante E }
+	\begin{lstlisting}
+		struct Socket {
+			Socket(Port p) { open(p); }
+			~Socket() {
+				if(invalid != port) { close(); }
+			}
+		};
+		
+		Socket createSocket(Port p) {
+			try{
+				return Socket(p);
+			}catch(SocketExcp&) { /*...*/ }
+		}
+		
+		Socket sock = createSocket(80);	// moves!
+		
+	\end{lstlisting}
+\end{frame}
+
