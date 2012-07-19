@@ -210,15 +210,19 @@
 \begin{frame}[fragile]{ Beispiel: \texttt{mutex} + \texttt{unique\_lock} }
 	\begin{lstlisting}
 		#include <mutex>
-		LargeData dat;
-		mutex dat_mutex;
+		shared_ptr < LargeData >  pDat;
+		shared_ptr < mutex >      pDat_mutex;
 		
 		void calc(int p)
 		{
+			shared_ptr < LargeData > pMyDat = pDat;
+			
 			/* ... */
-			{unique_lock datLock( dat_mutex );
-				dat.change();
+			
+			{unique_lock datLock = {*pDat_mutex};
+				pMyDat->change();
 			}
+			
 			/* ... */
 		}
 	\end{lstlisting}
@@ -228,24 +232,24 @@
 	\alert{Viele Katzen sterben bei einem dead-lock!}
 	
 	\begin{lstlisting}[basicstyle=\scriptsize]
-		AdditionalData addDat;
-		mutex addDat_mutex;
+		shared_ptr < AdditionalData >  pAddDat;
+		shared_ptr < mutex >           pAddDat_mutex;
 		
-		void calc0(int p)
-		{
+		void calc0(int p) {
+			shared_ptr < LargeData > pMyDat = pDat;
 			/* ... */
-			{unique_lock addDatLock = {addDat_mutex};
-			 unique_lock    datLock = {dat_mutex};
-				dat.change();
+			{unique_lock addDatLock = {*pAddDat_mutex};
+			 unique_lock    datLock = {*pDat_mutex};
+				pMyDat->change();
 			}
 		}
 		
-		void calc1(int p)
-		{
+		void calc1(int p) {
+			shared_ptr < LargeData > pMyDat = pDat;
 			/* ... */
-			{unique_lock    datLock = {dat_mutex};
-			 unique_lock addDatLock = {addDat_mutex};
-				dat.change();
+			{unique_lock    datLock = {*pDat_mutex};
+			 unique_lock addDatLock = {*pAddDat_mutex};
+				pMyDat->change();
 			}
 		}
 	\end{lstlisting}
