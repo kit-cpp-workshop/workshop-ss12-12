@@ -200,8 +200,9 @@
 
 \begin{frame}{concurrent data access}
 	\begin{itemize}
-		\item Reines Lesen von Daten ist meist kein Problem.
-		\item Einfachste Lösung für Schreibzugriff: locking
+		\item Reines Lesen von (konstanten) Daten ist meist kein Problem.
+		\item Gibt es einen Schreibenden $\implies$ Probleme
+		\item Einfachste Lösung: locking
 		\item Hinweis: auf Puffern durch Compiler achten (\texttt{volatile})
 	\end{itemize}
 	
