@@ -28,12 +28,12 @@
 \end{frame}
 
 \begin{frame}{threads in sequentiellem Programmieren (1)}
-	\begin{block}{Multi-Tasking}
+	\begin{block}{thread scheduling}
 		\begin{enumerate}
-			\item Der Task / das Programm läuft.
+			\item Ein Thread durchläuft das Programm (Ausführung).
 			\item Der Programmablauf wird zu einem unbekannten Zeitpunkt unterbrochen.
-			\item Andere Tasks werden fortgesetzt.
-			\item Irgendwann wird der eigene Task fortgesetzt.
+			\item Andere Threads werden fortgesetzt.
+			\item Irgendwann wird der eigene Thread fortgesetzt.
 		\end{enumerate}
 		
 		\pause
@@ -41,19 +41,23 @@
 		\begin{itemize}
 			\item Keine Garantie, wann unterbrochen wird.
 			\item Keine Garantie, wer wann ausgeführt/fortgesetzt wird.
-			\item Mehrere Tasks: weiß nicht ohne Stoppen, wer wann wo ist (Unschärferelation!).
+			\item Mehrere Threads: weiß nicht ohne Stoppen, wer wann wo ist. (Unschärferelation!)
 			\item Fortsetzen \enquote{als wäre nichts geschehen} (wie standby)
 		\end{itemize}
 	\end{block}
 \end{frame}
 
 \begin{frame}{threads in sequentiellem Programmieren (2)}
-	\begin{block}{Multi-Threading}
-		Dieselben Garantien, konzeptuell aber mglw. \emph{parallele Ausführung}.
+	\begin{block}{concurrent threads}
+		Bei mehreren Kernen/CPUs/\dots: gleichzeitiges Ausführen mehrerer Threads möglich.
+		Dieselben (nicht-)Garantien wie bei thread scheduling!
 	\end{block}
 	
+	Resultat: Kenne den Zustand eines anderen Threads \emph{nur bei Synchronisierung}!\\
+	Analogie: Unbestimmtheit eines Teilchenzustandes bis zur Messung
+	
 	\pause
-	\vspace{2em}
+	\vspace{1em}
 	
 	\begin{block}{Kombiniert}
 		\begin{itemize}
