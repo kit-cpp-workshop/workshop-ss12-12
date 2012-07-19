@@ -310,15 +310,13 @@
 	Hier nur als Skizze!
 	
 	\begin{block}{promises \& futures}
-		aktueller Thread = $A$, neuer Thread für Aufgabe = $N$
+		aktueller Thread = $A$, (neuer) Thread für Aufgabe = $N$
 		\begin{itemize}
-			\item $A$ erhält beim/vor dem Erzeugen von $N$ eine \texttt{future}
-			\item \texttt{future} \enquote{kennt} intern $N$ und die \texttt{promise}
-			\item \texttt{promise} verspricht, einen Rückgabewert zu enthalten
-			\item<2-> $N$ speichert sein Ergebnis in der \texttt{promise}
-			\item<3-> $A$ kann auf die \texttt{future} warten und wenn der Rückgabewert gesetzt wurde, diesen auslesen
-			\item<3-> ODER, bei lazy evaluation: statt das $A$ wartet, wird (erst jetzt!) in $A$ der Rückgabewert berechnet
-			\item<4-> Beim Auslesen dieses Rückgabewertes kann eine Exception von $N$ nach $A$ propagiert werden!
+			\item $A$ erwartet ein Resultat in einer gewissen Form (Typ): \texttt{future}
+			\item $N$ verspricht, das Resultat zu geben, und zwar an einen bestimmten \enquote{Ort}: \texttt{promise}
+			\item<2-> $A$ kann mittels der \texttt{future} auf $N$ warten und dann den Rückgabewert auslesen
+			\item<2-> ODER, bei lazy evaluation: $A$ berechnet selbst das Ergebnis, aber erst wenn es angefordert wird
+			\item<3-> Beim Auslesen dieses Rückgabewertes kann eine Exception von $N$ nach $A$ propagiert werden!
 		\end{itemize}
 	\end{block}
 \end{frame}
