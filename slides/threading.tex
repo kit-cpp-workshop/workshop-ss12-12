@@ -129,7 +129,6 @@
 				
 				#include <thread>
 				
-				
 				int result = 0;
 				std::thread myThread =
 					{&calc,
@@ -137,6 +136,8 @@
 					 
 				/* do something else */
 				myThread.join();
+				
+				std::cout << result;
 			\end{lstlisting}
 		
 		\pause
@@ -158,6 +159,8 @@
 				
 				/* do something else */
 				myThread.join();
+				
+				std::cout << myCalc.result;
 			\end{lstlisting}
 	\end{columns}
 \end{frame}
