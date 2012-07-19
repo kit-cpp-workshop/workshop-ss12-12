@@ -1,0 +1,181 @@
+﻿\section{function pointers}
+
+
+\subsection{Grundlagen, bind}
+
+\begin{frame}{function pointers}
+	\footnotesize
+	
+	\begin{block}{Allgemeines}
+		\begin{itemize}
+			\item ein \enquote{normaler} Pointer enthält die Adresse eines »Dinges«
+			\item ein \emph{function pointer} enthälten die Adresse einer Funktion
+			\item Nicht alle Funktionen haben eine Adresse! (z.B. ctor)
+			\item Signatur der Funktion gibt Typen des function ptrs
+		\end{itemize}
+	\end{block}
+	
+	\pause
+	
+	Syntax grausam! Nicht direkt verwenden!
+	
+	\begin{block}{function objects}
+		\begin{itemize}
+			\item function objects können der (syntaktisch) wie eine Funktion aufgerufen werden (operator overloading)
+			\item enthalten entweder selbst den Funktionsaufruf oder sind wrapper für function ptrs
+			\item für optimale Performance kein spezifizierter Typ / template
+			\item Erzeugung und Speicherung am besten mittels Automatisierungen
+		\end{itemize}
+	\end{block}
+\end{frame}
+
+\begin{frame}[fragile]{Beispiel: function objects}
+	\begin{lstlisting}
+		int doCalc1(int, double, bool);
+		int doCalc2(int, double, bool);
+		int doCalc3();
+		
+		
+		#include <functional>
+		
+		auto myFunc = std::bind( &doCalc1 );	// OK
+		     myFunc = std::bind( &doCalc2 );	// OK
+		     myFunc = std::bind( myFunc );		// OK
+		     myFunc = std::bind( &doCalc3 );	// error!
+		
+		int  result = myFunc(4, 2.0, true);
+	\end{lstlisting}
+\end{frame}
+
+\begin{frame}[fragile]{ \texttt{std::bind} \& ownership }
+	\begin{itemize}
+		\item \texttt{bind} kopiert üblicherweise
+		\item moved, wenn kopieren verboten
+		\item alternativ: \texttt{std::ref} oder (smart) ptr
+	\end{itemize}
+	
+	\pause
+	
+	\begin{lstlisting}
+		void thieve( unique_ptr < MonaLisa > );
+		bool drawAt( MonaLisa& );
+		
+		MonaLisa ml;
+		std::bind( &drawAt, std::ref(ml) );
+		
+		unique_ptr < MonaLisa > pML = new MonaLisa;
+		std::bind( &thieve, pML );
+	\end{lstlisting}
+\end{frame}
+
+\begin{frame}[fragile]{ placeholders }
+	\begin{lstlisting}
+		int doCalc1(int, bool, double);
+		
+		#include <functional>
+		
+		auto myFunc = std::bind( &doCalc1, 42.0, _1, _2 );
+		//- myFunc has signature `int(bool, double)`
+		
+		int  result = myFunc(true, 4.2);
+	\end{lstlisting}
+	
+	\pause
+	
+	\begin{lstlisting}[firstnumber=9]
+		auto myFunc2 = std::bind( &doCalc1, _1, false, 21.42);
+		//- myFunc has signature `int (int)`
+		result = myFunc2(0);
+	\end{lstlisting}
+\end{frame}
+
+
+\subsection{ member functions }
+
+\begin{frame}[fragile]{ member functions }
+	\begin{itemize}
+		\item Bisher: »Ding« pointer und function pointer
+		\item Es gibt aber auch pointer-to-member (extrem selten!) und pointer-to-member-function \dots
+		\item Veranschaulichung: Auf welcher Instanz soll die member function aufgerufen werden, wenn ich nur ihre Adresse habe?
+		\item Veranschaulichung: Wer setzt den \texttt{this}-Pointer?
+	\end{itemize}
+	
+	\pause
+	
+	Normale Syntax noch hässlicher als die von function pointers!	\\
+	Daher wieder mit function objects.
+	
+	\begin{lstlisting}
+		struct Calculator {
+			int add(int);
+			int sub(int);
+			int res() const;
+		};
+		struct Calc2 {
+			int add(int);
+		};
+		
+		auto myFunc = std::bind( &Calculator::add );
+		//- myFunc has signature akin to `int (Calculator&, int)`
+		     myFunc = std::bind( &Calculator::sub );
+		     myFunc = std::bind( &Calculator::res );    // error!
+		     myFunc = std::bind( &Calc2::add );         // error!
+		
+		shared_ptr < Calculator > spC = new Calculator;
+		Calculator& rC = *spC;
+		Calculator* pC = spC.get();
+		
+		int result = myFunc(spC, 5);
+		    result = myFunc(rC, 5);
+		    result = myFunc(pC, 5);
+	\end{lstlisting}
+\end{frame}
+
+\begin{frame}[fragile]{ member function to (free) functions }
+	Man kann die zu verwendene Instanz an das function object binden!
+	
+	\begin{lstlisting}
+		Calculator myCalc;
+		auto myFunc = std::bind( &Calculator::add, myCalc );
+		//- myFunc has signature `int(int)`
+		     myFunc = std::bind( &Calculator::add, std::ref(myCalc) );
+		     myFunc = std::bind( &Calculator::add, &myCalc );
+			 
+		shared_ptr < Calculator > pMyCalc = new Calculator;
+		     myFunc = std::bind( &Calculator::add, pMyCalc );
+			 
+		int result = myFunc(42);
+	\end{lstlisting}
+\end{frame}
+
+
+\subsection{ polymorphic function wrappers }
+
+\begin{frame}[fragile]{ polymorphic function wrappers }
+	\footnotesize
+	
+	Wie bei pointern + Polymorphismus kann in einem function object alles mögliche referenziert werden (z.B. member function vs. normale function).	\\
+	$\implies$ spezielles wrapper-Objekt, das eben alles mögliche Aufnehmen \& speichern kann (auch gebundene Parameter usw.)
+	
+	\pause
+	
+	\begin{lstlisting}[basicstyle=\scriptsize]
+		#include <functional>
+		
+		struct EventProvider {
+			std::function < int(bool) > observer;
+			void pollEvent() {
+				/* ... */
+				int result = observer(true);
+				/* ... */
+			}
+		};
+		
+		int onEvent(bool);
+		
+		EventProvider ep;
+		ep.observer = std::bind( &onEvent );
+		/* ... */
+		ep.pollEvent();
+	\end{lstlisting}
+\end{frame}
