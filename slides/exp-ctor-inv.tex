@@ -1,30 +1,37 @@
 \section{exceptions, ctor und Invarianten}
 
-\begin{frame}[fragile]{ Variante A }
-	\begin{lstlisting}
+\begin{frame}[t, fragile]{ Variante A }
+	\begin{lstlisting}[basicstyle=\scriptsize]
 		struct Socket {
-			Socket(Port p) { open(p); }
-			~Socket() { close(); }
+			// no default-ctor!
+			 Socket(Port p) { open(p); }
+			~Socket()       { close(); }
 			
-			send() { /*...*/ }
+			void send() {
+				// invariant: socket is usable
+				/*...*/
+			}
 		};
 		
 		try {
-			Socket s = {80};
-			s.use();
+			Socket s(80);
+			s.send();
 		}catch(SocketExcp&) { /*...*/ }
 		
 		// cannot use `s` outside!
 	\end{lstlisting}
 \end{frame}
 
-\begin{frame}[fragile]{ Variante B }
-	\begin{lstlisting}
+\begin{frame}[t, fragile]{ Variante B }
+	\begin{lstlisting}[basicstyle=\scriptsize]
 		struct Socket {
-			Socket() { open(invalid); }
-			Socket(Port p) { open(p); }
-			~Socket() {
-				if(invalid != port) { close(); }
+			 Socket()       { open(invalid); }
+			 Socket(Port p) { open(p); }
+			~Socket()       {    if(invalid != port) { close(); }    }
+			
+			void send() {
+				if(invalid == port) { throw NotInitialised(); }
+				/* ... */
 			}
 		};
 		
@@ -34,16 +41,21 @@
 		}catch(std::bad_alloc&) { /*...*/
 		}catch(SocketExcp&) { /*...*/
 		}
-		
-		sock.use();
+		sock.send();
 	\end{lstlisting}
 \end{frame}
 
-\begin{frame}[fragile]{ Variante C }
-	\begin{lstlisting}
+\begin{frame}[t, fragile]{ Variante C }
+	\begin{lstlisting}[basicstyle=\scriptsize]
 		struct Socket {
-			Socket(Port p) { open(p); }
-			~Socket() { close(); }
+			// no default-ctor!
+			 Socket(Port p) { open(p); }
+			~Socket()       { close(); }
+			
+			void send() {
+				// invariant: socket is usable
+				/*...*/
+			}
 		};
 		
 		Socket* pSock = nullptr;
@@ -52,19 +64,21 @@
 		}catch(std::bad_alloc&) { /*...*/
 		}catch(SocketExcp&) { /*...*/
 		}
-		
-		pSock->use();
-		
+		pSock->send();
 		delete pSock;
 	\end{lstlisting}
 \end{frame}
 
-\begin{frame}[fragile]{ Variante D }
-	\begin{lstlisting}
+\begin{frame}[t, fragile]{ Variante D }
+	\begin{lstlisting}[basicstyle=\scriptsize]
 		struct Socket {
-			Socket(Port p) { open(p); }
-			~Socket() {
-				if(invalid != port) { close(); }
+			// no default-ctor!
+			 Socket(Port p) { open(p); }
+			~Socket()       { close(); }
+			
+			void send() {
+				// invariant: socket is usable
+				/*...*/
 			}
 		};
 		
@@ -79,12 +93,16 @@
 	\end{lstlisting}
 \end{frame}
 
-\begin{frame}[fragile]{ Variante E }
-	\begin{lstlisting}
+\begin{frame}[t, fragile]{ Variante E }
+	\begin{lstlisting}[basicstyle=\scriptsize]
 		struct Socket {
-			Socket(Port p) { open(p); }
-			~Socket() {
-				if(invalid != port) { close(); }
+			// no default-ctor!
+			 Socket(Port p) { open(p); }
+			~Socket()       { close(); }
+			
+			void send() {
+				// invariant: socket is usable
+				/*...*/
 			}
 		};
 		
@@ -95,7 +113,6 @@
 		}
 		
 		Socket sock = createSocket(80);	// moves!
-		
 	\end{lstlisting}
 \end{frame}
 
