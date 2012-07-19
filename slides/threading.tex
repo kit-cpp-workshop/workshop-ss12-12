@@ -93,7 +93,36 @@
 
 \subsection{threads in sequentiellem C++11}
 
-\begin{frame}{threads und storage duration}
+\begin{frame}[fragile]{threads und storage duration}
+	\footnotesize
+	\vspace{-0.5em}
+	
+	\begin{block}{\footnotesize Zugriff auf ein »Ding« über seinen Namen}
+		\begin{itemize}
+			\item Jeder thread hat seinen eigenen Stack
+			\item automatic storage: unabhängig
+			\item static storage: geteilt
+			\item dynamic storage: n/A (kein Name!)
+			\item thread-local storage: duration wie bei static, aber Daten individuell pro thread
+		\end{itemize}
+	\end{block}
+	\alert<1>{Zugriff über Pointer immer möglich!}
+	
+	\pause
+	
+	\begin{lstlisting}[basicstyle=\scriptsize]
+		int stS = 42;
+		thread_local bool tlS;
+		
+		void foo(int* ptr) {
+			int auS = 5;
+			stS = 15;
+			tlS = 10;
+			
+			*ptr = 21;
+			double* dyS2 = new double(3.0);
+		}
+	\end{lstlisting}
 \end{frame}
 
 \begin{frame}{threads in sequentiellem C++11}
