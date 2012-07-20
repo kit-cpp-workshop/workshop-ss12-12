@@ -1,6 +1,6 @@
 \section{variadic templates}
 
-\begin{frame}[fragile]{Beispiel printf}
+\begin{frame}[fragile]{Beispiel printf (von wikipedia)}
 	\begin{lstlisting}[basicstyle=\tiny]
 void printf(const char *s)
 {
@@ -24,5 +24,22 @@ void printf(const char *s, T value, Args... args)
     }
     throw std::logic_error("more arguments than %");
 }
+printf("uint: %u, float: %f\n", 42.235123, "hallo");
+\end{lstlisting}
+\end{frame}
+
+\begin{frame}[fragile]{Beispiel printline}
+	\begin{lstlisting}[basicstyle=\tiny]
+void printline()
+{
+    std::cout << std::endl;
+}
+template<typename T, typename... Args>
+void printline(T value, Args... args)
+{
+    std::cout << T << std::endl;
+}
+printline("uint: ", 42.235123, ", float: ", "hallo");
+std::cout << "uint: " << 42.235123 << ", float: " << "hallo" << std::endl;
 \end{lstlisting}
 \end{frame}
