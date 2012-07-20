@@ -49,15 +49,17 @@
 
 \begin{frame}{threads in sequentiellem Programmieren (2)}
 	\begin{block}{concurrent threads}
-		Bei mehreren Kernen/CPUs/\dots: gleichzeitiges Ausführen mehrerer Threads möglich.
+		Mehrere Kernen/CPUs/\dots: Parallele Ausführung von Threads möglich.\\
 		Dieselben (nicht-)Garantien wie bei thread scheduling!
 	\end{block}
 	
-	Resultat: Kenne den Zustand eines anderen Threads \emph{nur bei Synchronisierung}!\\
+	Resultat: Zustand anderer Threads kann beliebig inkonsistent sein\\
 	Analogie: Unbestimmtheit eines Teilchenzustandes bis zur Messung
+	\begin{center}
+		\emph{$\rightarrow$ Synchronisation zwischen den Threads ist erforderlich!}
+	\end{center}
 	
 	\pause
-	\vspace{1em}
 	
 	\begin{block}{Kombiniert}
 		\begin{itemize}
@@ -71,7 +73,7 @@
 \begin{frame}{Grundlegende Probleme}
 	Bei sequentiellem Programm-Design!
 	
-	\vspace{1em}
+	\vspace{0.5em}
 	
 	Kein Problem: Mehrere unabhängige Sequenzen\\
 	Probleme bei \emph{Interaktion} und \emph{Überlappungen}
@@ -82,7 +84,7 @@
 		\item Exceptions (!)
 	\end{itemize}
 	
-	\vspace{1em}
+	\vspace{0.5em}
 	
 	Zusätzlicher Aspekt (neben const correctness, exception safety usw.):
 	\begin{block}{threading safety}
@@ -119,12 +121,12 @@
 		thread_local bool tlS;
 		
 		void foo(int* ptr) {
-			int auS = 5;
-			stS = 15;
-			tlS = 10;
+		    int auS = 5;
+		    stS = 15;
+		    tlS = 10;
 			
-			*ptr = 21;
-			double* dyS2 = new double(3.0);
+		    *ptr = 21;
+		    double* dyS2 = new double(3.0);
 		}
 	\end{lstlisting}
 \end{frame}
@@ -146,7 +148,7 @@
 			\item Übergabe einer Funktion wie bei \texttt{std::bind}
 			\item member functions \texttt{join}, \texttt{joinable}, \texttt{detach}
 			\item Achtung: dtor terminiert das Programm, wenn der thread noch läuft!
-			\item static mem function: \texttt{hardware\_concurrency}
+			\item static member function: \texttt{hardware\_concurrency}
 		\end{itemize}
 	\end{block}
 \end{frame}
@@ -164,8 +166,8 @@
 				
 				int result = 0;
 				std::thread myThread =
-					{&calc,
-					 5, std::ref(result)};
+				    {&calc, 5, 
+				     std::ref(result)};
 					 
 				/* do something else */
 				
@@ -179,8 +181,8 @@
 		\column{0.6\textwidth}
 			\begin{lstlisting}
 				struct Calculator {
-					void calc(int);
-					int result;
+				    void calc(int);
+				    int result;
 				};
 				
 				
@@ -188,8 +190,8 @@
 				
 				Calculator myCalc;
 				std::thread myThread =
-					{&MyCalculator::calc, std::ref(myCalc),
-					 5};
+				    {&MyCalculator::calc, 
+				     std::ref(myCalc), 5};
 				
 				/* do something else */
 				
@@ -205,7 +207,7 @@
 		\item Reines Lesen von (konstanten) Daten ist meist kein Problem.
 		\item Gibt es einen Schreibenden $\implies$ Probleme
 		\item Einfachste Lösung: locking
-		\item Hinweis: auf Puffern durch Compiler achten (\texttt{volatile})
+		\item Hinweis: Auf Puffern durch Compiler achten (\texttt{volatile})
 	\end{itemize}
 	
 	\pause
@@ -251,42 +253,42 @@
 		
 		void calc(int p)
 		{
-			shared_ptr < LargeData > pMyDat = pDat;
+		    shared_ptr < LargeData > pMyDat = pDat;
 			
-			/* ... */
+		    /* ... */
 			
-			{unique_lock datLock = {*pDat_mutex};
-				pMyDat->change();
-			}
+		    { unique_lock datLock = {*pDat_mutex};
+		        pMyDat->change();
+		    }
 			
-			/* ... */
+		    /* ... */
 		}
 	\end{lstlisting}
 \end{frame}
 
-\begin{frame}[fragile]{ Viele tote Katzen: dead-lock }
-	\alert{Viele Katzen sterben bei einem dead-lock!}
+\begin{frame}[fragile]{dead-lock}
+	\alert{Wechselseitige Abhängigkeiten $\rightarrow$ Blockade!}
 	
 	\begin{lstlisting}[basicstyle=\scriptsize]
 		shared_ptr < AdditionalData >  pAddDat;
 		shared_ptr < mutex >           pAddDat_mutex;
 		
 		void calc0(int p) {
-			shared_ptr < LargeData > pMyDat = pDat;
-			/* ... */
-			{unique_lock addDatLock = {*pAddDat_mutex};
-			 unique_lock    datLock = {*pDat_mutex};
-				pMyDat->change();
-			}
+		    shared_ptr < LargeData > pMyDat = pDat;
+		    /* ... */
+		    {unique_lock addDatLock = {*pAddDat_mutex};
+		     unique_lock    datLock = {*pDat_mutex};
+		        pMyDat->change();
+		    }
 		}
 		
 		void calc1(int p) {
-			shared_ptr < LargeData > pMyDat = pDat;
-			/* ... */
-			{unique_lock    datLock = {*pDat_mutex};
-			 unique_lock addDatLock = {*pAddDat_mutex};
-				pMyDat->change();
-			}
+		    shared_ptr < LargeData > pMyDat = pDat;
+		    /* ... */
+		    {unique_lock    datLock = {*pDat_mutex};
+		     unique_lock addDatLock = {*pAddDat_mutex};
+		        pMyDat->change();
+		    }
 		}
 	\end{lstlisting}
 \end{frame}
@@ -325,9 +327,9 @@
 	\begin{lstlisting}
 		int calcHard(int i, double d)
 		{
-			int result;
-			/* work hard, maybe throw up */
-			return result;
+		    int result;
+		    /* work hard, maybe throw up */
+		    return result;
 		}
 		
 		

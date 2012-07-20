@@ -2,9 +2,12 @@
 
 \begin{frame}[fragile]{Beispiel: template template template member type}
 	\begin{lstlisting}[basicstyle=\tiny]
-		std::vector<std::unique_ptr<myTemplate<int, std::string, myClass3> > >::const_iterator it = somecoolFunction();
+		std::vector<std::unique_ptr<myTemplate<int, std::string, myClass3> > >::const_iterator
+		    it = somecoolFunction();
 		
-		typedef std::vector<std::unique_ptr<myTemplate<int, std::string, myClass3> > >::const_iterator my_it_type;
+		typedef std::vector<std::unique_ptr<myTemplate<int, std::string, myClass3> > >::const_iterator 
+		    my_it_type;
+		    
 		my_it_type it2 = somecoolFunction();
 	\end{lstlisting}
 	\begin{lstlisting}

@@ -3,21 +3,21 @@
 \begin{frame}[t, fragile]{ Variante A }
 	\begin{lstlisting}[basicstyle=\scriptsize]
 		struct Socket {
-			// no default-ctor!
-			 Socket(Port p) { open(p); }
-			~Socket()       { close(); }
+		    // no default-ctor!
+		     Socket(Port p) { open(p); }
+		    ~Socket()       { close(); }
 			
-			void send() {
-				// invariant: socket is usable
-				/*...*/
-			}
+		    void send() {
+		        // invariant: socket is usable
+		        /*...*/
+		    }
 		};
 		
 		
 		
 		try {
-			Socket s(80);
-			s.send();
+		    Socket s(80);
+		    s.send();
 		}catch(SocketExcp&) { /*...*/ }
 		
 		
@@ -29,20 +29,20 @@
 \begin{frame}[t, fragile]{ Variante B }
 	\begin{lstlisting}[basicstyle=\scriptsize]
 		struct Socket {
-			 Socket()       { open(invalid); }
-			 Socket(Port p) { open(p); }
-			~Socket()       {    if(invalid != port) { close(); }    }
+		    Socket()       { open(invalid); }
+		    Socket(Port p) { open(p); }
+		    ~Socket()      { if(invalid != port) { close(); } }
 			
-			void send() {
-				if(invalid == port) { throw NotInitialised(); }
-				/* ... */
-			}
+		    void send() {
+		        if(invalid == port) { throw NotInitialised(); }
+		        /* ... */
+		    }
 		};
 		
 		
 		Socket sock; // invalid socket!
 		try {
-			sock = Socket(80);	// moves!
+		    sock = Socket(80);	// moves!
 		}catch(std::bad_alloc&) { /*...*/
 		}catch(SocketExcp&) { /*...*/
 		}
@@ -55,20 +55,20 @@
 \begin{frame}[t, fragile]{ Variante C }
 	\begin{lstlisting}[basicstyle=\scriptsize]
 		struct Socket {
-			// no default-ctor!
-			 Socket(Port p) { open(p); }
-			~Socket()       { close(); }
+		    // no default-ctor!
+		    Socket(Port p) { open(p); }
+		    ~Socket()      { close(); }
 			
-			void send() {
-				// invariant: socket is usable
-				/*...*/
-			}
+		    void send() {
+		        // invariant: socket is usable
+		        /*...*/
+		    }
 		};
 		
 		
 		Socket* pSock = nullptr;
 		try {
-			pSock = new Socket(80);
+		    pSock = new Socket(80);
 		}catch(std::bad_alloc&) { /*...*/
 		}catch(SocketExcp&) { /*...*/
 		}
@@ -81,20 +81,20 @@
 \begin{frame}[t, fragile]{ Variante D }
 	\begin{lstlisting}[basicstyle=\scriptsize]
 		struct Socket {
-			// no default-ctor!
-			 Socket(Port p) { open(p); }
-			~Socket()       { close(); }
+		    // no default-ctor!
+		    Socket(Port p) { open(p); }
+		    ~Socket()      { close(); }
 			
-			void send() {
-				// invariant: socket is usable
-				/*...*/
-			}
+		    void send() {
+		        // invariant: socket is usable
+		        /*...*/
+		    }
 		};
 		
 		char sockBuf[ sizeof(Socket) ];
 		Socket* pSock = nullptr;
 		try {
-			pSock = new(sockBuf) Socket(80);
+		    pSock = new(sockBuf) Socket(80);
 		}catch(std::bad_alloc&) { /*...*/
 		}catch(SocketExcp&) { /*...*/
 		}
@@ -107,20 +107,20 @@
 \begin{frame}[t, fragile]{ Variante E }
 	\begin{lstlisting}[basicstyle=\scriptsize]
 		struct Socket {
-			// no default-ctor!
-			 Socket(Port p) { open(p); }
-			~Socket()       { close(); }
+		    // no default-ctor!
+		    Socket(Port p) { open(p); }
+		    ~Socket()      { close(); }
 			
-			void send() {
-				// invariant: socket is usable
-				/*...*/
-			}
+		    void send() {
+		        // invariant: socket is usable
+		        /*...*/
+		    }
 		};
 		
 		Socket createSocket(Port p) {
-			try{
-				return Socket(p);
-			}catch(SocketExcp&) { /*...*/ }
+		    try{
+		        return Socket(p);
+		    }catch(SocketExcp&) { /*...*/ }
 		}
 		
 		
