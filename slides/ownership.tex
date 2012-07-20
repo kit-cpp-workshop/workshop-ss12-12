@@ -185,9 +185,9 @@
 			}
 			
 			try{ something() }
-			catch(MyExpT&) { delete[] p; }
+			catch(MyExpT&)  { delete[] p; }
 			catch(MyExpT1&) { delete[] p; }
-			catch(...) { delete[] p; }
+			catch(...)      { delete[] p; }
 		\end{lstlisting}
 	\end{block}
 \end{frame}
