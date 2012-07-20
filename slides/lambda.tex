@@ -2,7 +2,6 @@
 
 \begin{frame}[fragile]{Beispiel}
 	\begin{lstlisting}[basicstyle=\tiny]
-#include <iostream>
 #include <functional>
 
 void doRaycast(int x, int y, int dx, int dy, std::function<bool(int, int, int)> cond)
@@ -11,7 +10,6 @@ void doRaycast(int x, int y, int dx, int dy, std::function<bool(int, int, int)> 
     if(cond(99, 42, 0)) return;
     if(cond(0, 0, 1)) return;
 }
-
 
 int main()
 {
