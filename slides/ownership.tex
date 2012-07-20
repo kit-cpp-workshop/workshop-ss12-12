@@ -222,10 +222,10 @@
 	\begin{itemize}
 		\item wrapper-Objekte für (raw) Pointer
 		\item RAII-Konstrukte (beim Zerstören wird automatisch aufgeräumt)
-		\item explizites owenership-Modell
+		\item explizites ownership-Modell
 		\item exception-\enquote{safe}
-		\item alter Repräsentant: auto\_ptr -- nicht verwenden (deprecated)!
-		\item Verwendung mit synax analog Pointern (\texttt{*} dereferenzieren, \texttt{->} (operator overloading)
+		\item alter Repräsentant: \texttt{auto\_ptr} -- nicht verwenden (deprecated)!
+		\item Verwendung mit synax analog Pointern (\texttt{*} dereferenzieren, \texttt{->} member access; via operator overloading)
 	\end{itemize}
 \end{frame}
 
@@ -277,8 +277,8 @@
 		Louvre myMuseum;
 		Peruggia myThief;
 		
-		unique_ptr < MonaLisa > pML = move( myMusee.breakIn() );
-		myThief.steel( move(pML) );
+		unique_ptr < MonaLisa > pML = move( myMuseum.breakIn() );
+		myThief.thieve( move(pML) );
 	\end{lstlisting}
 \end{frame}
 
@@ -350,7 +350,7 @@
 		public:
 		    typedef shared_ptr < My > Ptr;
 			
-		    static PMy create() {
+		    static Ptr create() {
 		        return new My;
 		    }
 		};
@@ -363,8 +363,7 @@
 \begin{frame}{ \texttt{shared\_ptr} \& Hierarchie }
 	Situation:
 	\begin{itemize}
-		\item Ein Besitzer-Objekt \texttt{}r hält ein Besitztum \texttt{d} in beliebigem ownership.
-		\item \texttt{r} selbst wird in shared ownership gehalten.
+		\item Ein Besitzer-Objekt \texttt{r} hält ein Besitztum \texttt{d} mit einem \texttt{shared\_ptr}.
 		\item \texttt{d} benötigt einen Zugang zu \texttt{r}.
 	\end{itemize}
 	
@@ -389,14 +388,21 @@
 	\begin{lstlisting}
 		struct Owned;
 		struct Owner {
-		    shared_ptr < Owned > m;
+		    shared_ptr < Owned > d;
 		    ~Owner();
+		    void change();
 		};
 		
 		struct Owned {
-		    weak_ptr < Owner > m;
+		    weak_ptr < Owner > r;
+		    void changeOwner() {
+		        shared_ptr < Owner > tempAccess = {r};
+		        tempAccess->change();
+		    }
 		};
 		
+		// dtor must be defined AFTER defining the class Owned
+		// as Owned is the template parameter of the data member d
 		Owner::~Owner() {}
 	\end{lstlisting}
 \end{frame}

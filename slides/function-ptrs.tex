@@ -74,7 +74,7 @@
 		
 		#include <functional>
 		
-		auto myFunc = std::bind( &doCalc1, 42.0, _1, _2 );
+		auto myFunc = std::bind( &doCalc1, 42, _1, _2 );
 		//- myFunc has signature `int(bool, double)`
 		
 		int  result = myFunc(true, 4.2);
@@ -104,15 +104,17 @@
 	
 	Normale Syntax noch hässlicher als die von function pointers!	\\
 	Daher wieder mit function objects.
-	
-	\begin{lstlisting}
+\end{frame}
+
+\begin{frame}[fragile]{ member functions: Beispiel }
+	\begin{lstlisting}[basicstyle=\scriptsize]
 		struct Calculator {
-			int add(int);
-			int sub(int);
-			int res() const;
+		    int add(int);
+		    int sub(int);
+		    int res() const;
 		};
 		struct Calc2 {
-			int add(int);
+		    int add(int);
 		};
 		
 		auto myFunc = std::bind( &Calculator::add );
@@ -163,12 +165,12 @@
 		#include <functional>
 		
 		struct EventProvider {
-			std::function < int(bool) > observer;
-			void pollEvent() {
-				/* ... */
-				int result = observer(true);
-				/* ... */
-			}
+		    std::function < int(bool) > observer;
+		    void pollEvent() {
+		        /* ... */
+		        int result = observer(true);
+		        /* ... */
+		    }
 		};
 		
 		int onEvent(bool);
