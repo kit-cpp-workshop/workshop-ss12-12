@@ -2,7 +2,7 @@
 
 \subsection{Konzeptuelles}
 
-\begin{frame}{threads}
+\begin{frame}{Historisches}
 	\begin{block}{Hardware}
 		Historische Architektur: Berechnungen auf CPU mit einem oder wenigen Kernen \\
 		$\implies$ sequentielles Programmieren, sequentielle Prozeduren
@@ -24,6 +24,30 @@
 		
 		unabhängige Tasks \\
 		$\implies$ Support durch OS
+	\end{block}
+\end{frame}
+
+\begin{frame}{Was ist ein Thread?}
+	\begin{block}{Sequentielles Programmieren}
+		\begin{itemize}
+			\item Programm besteht aus Reihe von Befehlssequenzen
+			\item Befehle einer Sequenz werden strikt nacheinander ausgeführt
+		\end{itemize}
+	\end{block}
+	
+	\pause
+	
+	\begin{block}{Thread}
+		\begin{itemize}
+			\item Ein Thread fürt vorgegebene Abfolge von Sequenzen aus	\\
+				$\implies$ Befehlsfluss
+			\item Mehrere Threads bearbeiten unabhängige Abfolgen
+				$\implies$ mehrere \enquote{parallele} Flüsse
+			\item Threads teilen sich bestimmte Dinge \dots
+			\item \dots haben aber auch individuelle Zuordnungen
+			\item bisher: ein Thread, der die \texttt{main} ausführt
+			\item jetzt: \emph{zusätzlich} beliebige Zahl Threads
+		\end{itemize}
 	\end{block}
 \end{frame}
 
@@ -49,17 +73,15 @@
 
 \begin{frame}{threads in sequentiellem Programmieren (2)}
 	\begin{block}{concurrent threads}
-		Mehrere Kernen/CPUs/\dots: Parallele Ausführung von Threads möglich.\\
+		Bei mehreren Kernen/CPUs/\dots: gleichzeitiges Ausführen mehrerer Threads möglich.
 		Dieselben (nicht-)Garantien wie bei thread scheduling!
 	\end{block}
 	
-	Resultat: Zustand anderer Threads kann beliebig inkonsistent sein\\
+	Resultat: Kenne den Zustand eines anderen Threads \emph{nur bei Synchronisierung}!\\
 	Analogie: Unbestimmtheit eines Teilchenzustandes bis zur Messung
-	\begin{center}
-		\emph{$\rightarrow$ Synchronisation zwischen den Threads ist erforderlich!}
-	\end{center}
 	
 	\pause
+	\vspace{1em}
 	
 	\begin{block}{Kombiniert}
 		\begin{itemize}
@@ -267,7 +289,7 @@
 \end{frame}
 
 \begin{frame}[fragile]{dead-lock}
-	\alert{Wechselseitige Abhängigkeiten $\rightarrow$ Blockade!}
+	\alert{Wechselseitiges Blockieren $\implies$ unendliches Warten}
 	
 	\begin{lstlisting}[basicstyle=\scriptsize]
 		shared_ptr < AdditionalData >  pAddDat;
