@@ -270,17 +270,18 @@
 \begin{frame}[fragile]{ Beispiel: \texttt{mutex} + \texttt{unique\_lock} }
 	\begin{lstlisting}
 		#include <mutex>
-		shared_ptr < LargeData >  pDat;
-		shared_ptr < mutex >      pDat_mutex;
+		shared_ptr < LargeData >   pDat;
+		shared_ptr < std::mutex >  pDat_mutex;
 		
 		void calc(int p)
 		{
-		    shared_ptr < LargeData > pMyDat = pDat;
+		    shared_ptr < LargeData >  pDat_my       = pDat;
+		    shared_ptr < std::mutex > pDat_mutex_my = pDat_mutex;
 			
 		    /* ... */
 			
-		    { unique_lock datLock = {*pDat_mutex};
-		        pMyDat->change();
+		    { unique_lock datLock = {*pDat_mutex_my};
+		        pDat_my->change();
 		    }
 			
 		    /* ... */
@@ -289,27 +290,29 @@
 \end{frame}
 
 \begin{frame}[fragile]{dead-lock}
+	\footnotesize
 	\alert{Wechselseitiges Blockieren $\implies$ unendliches Warten}
 	
 	\begin{lstlisting}[basicstyle=\scriptsize]
 		shared_ptr < AdditionalData >  pAddDat;
-		shared_ptr < mutex >           pAddDat_mutex;
+		shared_ptr < std::mutex >      pAddDat_mutex;
 		
 		void calc0(int p) {
-		    shared_ptr < LargeData > pMyDat = pDat;
+		    shared_ptr < AdditionalData > pAddDat_my       = pDat;
+		    shared_ptr < std::mutex >     pAddDat_mutex_my = ppAddDat_mutex;
 		    /* ... */
-		    {unique_lock addDatLock = {*pAddDat_mutex};
-		     unique_lock    datLock = {*pDat_mutex};
-		        pMyDat->change();
+		    {unique_lock addDatLock = {*pAddDat_mutex_my};
+		     unique_lock    datLock = {*pDat_mutex_my};
+		        pDat_my->change();
 		    }
 		}
-		
 		void calc1(int p) {
-		    shared_ptr < LargeData > pMyDat = pDat;
+		    shared_ptr < AdditionalData > pAddDat_my       = pDat;
+		    shared_ptr < std::mutex >     pAddDat_mutex_my = ppAddDat_mutex;
 		    /* ... */
-		    {unique_lock    datLock = {*pDat_mutex};
-		     unique_lock addDatLock = {*pAddDat_mutex};
-		        pMyDat->change();
+		    {unique_lock    datLock = {*pDat_mutex_my};
+		     unique_lock addDatLock = {*pAddDat_mutex_my};
+		        pMyDat_my->change();
 		    }
 		}
 	\end{lstlisting}
