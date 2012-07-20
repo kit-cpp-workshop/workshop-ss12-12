@@ -1,0 +1,15 @@
+\section{auto}
+
+\begin{frame}[fragile]{Beispiel: template template template member type}
+	\begin{lstlisting}[basicstyle=\tiny]
+		std::vector<std::unique_ptr<myTemplate<int, std::string, myClass3> > >::const_iterator it = somecoolFunction();
+		
+		typedef std::vector<std::unique_ptr<myTemplate<int, std::string, myClass3> > >::const_iterator my_it_type;
+		my_it_type it2 = somecoolFunction();
+	\end{lstlisting}
+	\begin{lstlisting}
+		// add a short description of it3 for future readers
+		// it3 is an iterator over mtISC3 pointers
+		auto it3 = somecoolFunction();
+	\end{lstlisting}
+\end{frame}
