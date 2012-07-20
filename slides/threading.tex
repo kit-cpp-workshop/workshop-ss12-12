@@ -360,7 +360,7 @@
 		
 		#include <future>
 		
-		future < int > future_result = async(&calcHard, 42, 21.0);
+		future < int > future_result = std::async(&calcHard, 42, 21.0);
 		/* do something or not */
 		int result = future_result.get();
 	\end{lstlisting}
