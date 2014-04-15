@@ -15,7 +15,7 @@ Die Vortragsfolien stehen als [PDF](kit-cpp-workshop.github.com/raw/downloads/wo
 
 ### Screencast
 
-Ein Screencast des Vortrags steht zum [Download](http://ubuntuone.com/25pbzqPSpOVh4RQcYFqnpD) bereit.
+Ein Screencast des Vortrags steht zum [Download](https://drive.google.com/file/d/0B18AwdjM48imekZ0ZjVPRnBacTQ/edit?usp=sharing) bereit.
 
  * ab 0:00:00 Überblick/Intro
  * ab 0:01:17 Exceptions, Constructors und Invarianten
